@@ -35,7 +35,7 @@ jQuery
 Bootstrap  
 jsrender  
 codemirror  
-API on tastypie  
+tastypie for REST API
 
 **From pip freeze:**
 ```
@@ -61,7 +61,9 @@ six==1.10.0
 1. Fix minor bugs
 
 ## Disclaimer
+
 We were using this thing in production for quite a long time, served us well. Use at your own risk.
 
 ## How to get help
+
 Contact and follow me on twitter (@sergeypronin)
