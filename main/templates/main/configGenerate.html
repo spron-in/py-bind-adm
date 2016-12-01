@@ -1,0 +1,103 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+
+<div class="container">
+<h3>Master config</h3>
+<pre>
+view internal {
+
+    match-clients { acl-internal; };
+    allow-recursion { any; };
+    allow-transfer { key internal-key; };
+    allow-query { any; };
+
+    {% for zone in zones %}
+    {% if zone.get_type_display == 'slave' %}
+    zone "{{ zone.zone }}" { type {{ zone.get_type_display }}; file "zones/{{ zone.view.view }}_{{ zone.zone }}"; masters { 10.25.10.137; }; };
+    {% else %}
+    zone "{{ zone.zone }}" { type {{ zone.get_type_display }}; file "zones/{{ zone.view.view }}_{{ zone.zone }}"; also-notify { {{ zone.view.view }}-notify; }; };
+    {% endif %}
+    {% endfor %}
+};
+
+view asia {
+
+    match-clients { acl-asia; };
+    allow-transfer { key asia-key; };
+    allow-query { any; };
+
+
+    {% for zone in zones %}
+        {% if zone.view.view == 'external' %}
+    zone "{{ zone.zone }}" { in-view internal; };
+        {% elif zone.view.view == 'asia' %}
+    zone "{{ zone.zone }}" { type master; file "zones/{{ zone.view.view }}_{{ zone.zone }}"; also-notify { {{ zone.view.view }}-notify; }; };
+        {% endif %}
+    {% endfor %}
+
+};
+
+view external {
+
+    match-clients { any; };
+    allow-transfer { key external-key; };
+    allow-query { any; };
+
+    {% for zone in zones %}
+        {% if zone.view.view == 'external' %}
+    zone "{{ zone.zone }}" { in-view internal; };
+        {% endif %}
+    {% endfor %}
+};
+</pre>
+<h3>Slave config</h3>
+<pre>
+view internal {
+
+    match-clients { acl-internal; };
+    allow-recursion { any; };
+    allow-query { any; };
+
+    {% for zone in zones %}
+    zone "{{ zone.zone }}" {
+        {% if zone.get_type_display == 'master' %}
+        type slave; file "zones/{{ zone.view.view }}_{{ zone.zone }}"; masters { {{ zone.view.view }}-master-servers; };
+        {% else %}
+        type forward; forwarders { 10.25.3.221; 10.25.10.123; };
+        {% endif %}
+    };
+    {% endfor %}
+};
+
+view asia {
+
+    match-clients { acl-asia; };
+    allow-query { any; };
+
+
+    {% for zone in zones %}
+        {% if zone.view.view == 'external' %}
+    zone "{{ zone.zone }}" { in-view internal; };
+        {% elif zone.view.view == 'asia' %}
+    zone "{{ zone.zone }}" { type slave; file "zones/{{ zone.view.view }}_{{ zone.zone }}"; masters { {{ zone.view.view }}-master-servers; }; };
+        {% endif %}
+    {% endfor %}
+
+};
+
+view external {
+
+    match-clients { any; };
+    allow-query { any; };
+
+    {% for zone in zones %}
+        {% if zone.view.view == 'external' %}
+    zone "{{ zone.zone }}" { in-view internal; };
+        {% endif %}
+    {% endfor %}
+};
+</pre>
+</div>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+dns:
+  default:
+    ttl: 600
+
+  path:
+    tmp: /tmp/
+    bind: /etc/bind/
+    master_zones: /etc/bind/zones/
+    master_backup: /etc/bind/backup/
+    master_include: /etc/bind/include/
+    slave_zones: /etc/bind/zones/
+    slave_backup: /etc/bind/backup/
+    slave_include: /etc/bind/backup/
+    www_workdir: /path/to/www
+    ssh_private_key: /path/to/id_rsa
+
+
+  exec:
+    checkzone: /usr/sbin/named-checkzone
+    compilezone: /usr/sbin/named-compilezone
+    checkconf: /usr/sbin/named-checkconf
+    cp: /bin/cp
+    mv: /bin/mv
+    rm: /bin/rm
+    rndc: /usr/sbin/rndc
+    scp: /usr/bin/scp
+    ssh: /usr/bin/ssh
+    dig: /usr/bin/dig
+    timeout: /usr/bin/timeout
+
+  files:
+    ssh_private_key: /path/to/id_rsa
+    rndc_remote_key: /etc/bind/rndc-remote.key
+
+  system:
+    ssh_user: ssh_user
+    rndc_remote_port: 7766

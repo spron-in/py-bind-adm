@@ -1,0 +1,27 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+<div class="container">
+<h3>{{ serverConfig.group }}</h3>
+{% csrf_token %}
+<form id="serverConfigForm">
+    <textarea id="configArea" name="config" rows="20" style="min-width: 70%">
+    {{ serverConfig.config }}
+    </textarea>
+    <script src="/mode/nginx.js"></script>
+    <script>
+    var editor = CodeMirror.fromTextArea(configArea, {
+        lineNumbers: true
+    });
+    editor.setSize(1024,1024);
+    </script>
+    <br/>
+    <span>
+        <input type="button" class="btn btn-primary" value="Save" onClick="dns_patchConfig({{ serverConfig.id }});">
+        &nbsp; &nbsp;
+        <input type="button" class="btn btn-primary" value="Apply" onClick="dns_applyConfig({{ serverConfig.id }});">
+    </span>
+</form>
+</div>
+<br/>
+{% endblock %}

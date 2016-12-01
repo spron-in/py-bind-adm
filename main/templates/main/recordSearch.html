@@ -1,0 +1,161 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+
+<script id="RecordTemplate" type="text/x-jsredner">
+
+    <tr id="record_<%> id %>">
+        <td><%> record_type_text %></td>
+
+        <%if host == '@'%>
+            <td><span class="text-muted"><%> zone.zone %></span></td>
+        <%else%>
+            <td><%> host %>.<span class="text-muted"><%> zone.zone %></span></td>
+        <%/if%>
+
+        <td><%> zone.view.view %></td>
+        <td><%> answer %></td>
+        <td><%> ttl %></td>
+        <%if record_type_text == 'MX'%>
+            <td><%> priority %></td>
+        <%else%>
+            <td></td>
+        <%/if%>
+        <td>
+
+            <a href="javascript:void(0);" onClick="dns_editRecord(<%> id %>);">edit</a> | 
+            <a href="javascript:void(0);" onMouseDown="dns_deleteRecordTimer(<%> id %>);">delete</a>
+        </td>
+    </tr>
+
+</script>
+
+<script id="editRecordTemplate" type="text/x-jsredner">
+
+    <form id="editRecordForm_<%> id %>"></form>
+
+    <tr id="record_<%> id %>">
+    {% csrf_token %}
+    <input type="hidden" value="/api/v1/zone/<%> zone.id %>/" name="zone" form="editRecordForm_<%> id %>">
+    <input type="hidden" value="<%> id %>" name="record_id" form="editRecordForm_<%> id %>">
+
+    <td>
+        <input type="hidden" name="record_type" value="<%> record_type %>" form="editRecordForm_<%> id %>">
+        <%> record_type_text %>
+    </td>
+
+    <td>
+        <%if host == '@'%>
+            <input type="text" name="host" id="host" form="editRecordForm_<%> id %>">.<%> zone.zone %></input>
+        <%else%>
+            <input type="text" name="host" id="host" form="editRecordForm_<%> id %>" value="<%> host %>">.<%> zone.zone %></input>
+        <%/if%>
+    </td>
+
+    <td>
+        <p><%> zone.view.view %></p>
+    </td>
+
+    <td>
+        <input type="text" name="answer" id="answer" form="editRecordForm_<%> id %>" value="<%> answer %>"></input>
+    </td>
+
+    <td class="col-sm-1">
+        <input class="col-sm-10" type="text" name="ttl" id="ttl" value="<%> ttl %>" form="editRecordForm_<%> id %>"></input>
+    </td>
+
+    <td class="col-sm-1">
+        <%if record_type_text == 'MX'%>
+        <input class="col-sm-10" type="text" name="priority" id="priority" value="<%> priority %>" form="editRecordForm_<%> id %>"></input>
+        <%else%>
+        <input type="hidden" name="priority" id="priority" value="0" form="editRecordForm_<%> id %>"></input>
+        <%/if%>
+    </td>
+
+    <td>
+        <input type="button" class="btn btn-warning" value="Update" onClick="dns_patchRecord(<%> id %>);"> | 
+        <input type="button" class="btn btn-primary" value="Cancel" onClick="dns_patchCancel(<%> id %>);">
+    </td>
+</tr>
+</script>
+
+<script id="notifyGenerate" type="text/x-jsredner">
+    <span class="glyphicon glyphicon-warning-sign"></span><b> Generate the zone</b><br/>
+    <br/>
+    <p>Zone: <%> zone.zone %></p>
+    <p>View: <%> zone.view.view %></p>
+    <button class="btn btn-primary center-block" onClick="dns_generateZone(<%> zone.id %>);">Generate</button>
+</script>
+
+<div class="container">
+
+<form class="form-horizontal">
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="hostFilter">Host</label>
+    <div class="col-sm-3">
+        <input type="text"  id="hostFilter" class="form-control filtercl">
+    </div>
+    <div class="col-sm-4">
+        <label class="control-label"for="totalRecords">Records found: </label>
+        <span id="totalRecords"></span>
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="zoneFilter">Zone</label>
+    <div class="col-sm-3">
+        <input type="text" id="zoneFilter" class="form-control filtercl">
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="answerFilter">Answer</label>
+    <div class="col-sm-3">
+        <input type="text" id="answerFilter" class="form-control filtercl">
+    </div>
+</div>
+
+</form>
+
+<table class="table" id="recordTable" style="word-wrap: break-word; table-layout: fixed;">
+<thead>
+    <tr>
+        <th class="col-md-1">type</th>
+        <th class="col-md-3">host</th>
+        <th class="col-md-2">view</th>
+        <th class="col-md-2">answer</th>
+        <th class="col-md-1">ttl</th>
+        <th class="col-md-1">priority</th>
+        <th class="col-md-2">actions</th>
+    </tr>
+</thead>
+<tbody id="recordList">
+
+</tbody>
+</table>
+<button id="showMoreButton" class="hidden center-block btn btn-info" onClick="showMoreRecords();">Show more</button>
+<br/>
+</div>
+
+<script type="text/javascript">
+    var RecordSearch = {};
+    RecordSearch.offset = 0;
+    $( document ).ready( function() {
+        dns_searchRecords();
+    } );
+
+    $( ".filtercl" ).keyup(function() {
+        RecordSearch.offset = 0;
+        $( '#recordList' ).empty();
+        dns_searchRecords(RecordSearch.offset, 40, $('#hostFilter').val(), $('#zoneFilter').val(), $('#answerFilter').val());
+    });
+
+    function showMoreRecords() {
+
+        RecordSearch.offset += 40;
+        dns_searchRecords(RecordSearch.offset, 40, $('#hostFilter').val(), $('#zoneFilter').val(), $('#answerFilter').val());
+    }
+
+</script>
+{% endblock %}

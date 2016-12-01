@@ -1,0 +1,29 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+<div class="container">
+<table class="table" id="configTable">
+<thead>
+    <tr>
+        <th>Name</th>
+        <th>Filename</th>
+        <th>Type</th>
+        <th>Action</th>
+    </tr>
+</thead>
+<tbody>
+
+{% for config in configs %}
+<tr>
+    <td>{{ config.group }}</td>
+    <td>{{ config.name }}</td>
+    <td>{{ config.get_type_display }}</td>
+    <td><a href="{% url 'main:configDetail' config.id %}">edit</a></td>
+</tr>
+{% endfor %}
+
+
+</tbody>
+</table>
+</div>
+{% endblock %}

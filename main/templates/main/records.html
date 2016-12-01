@@ -1,0 +1,214 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+
+<script id="RecordTemplate" type="text/x-jsredner">
+
+    <tr id="record_<%> id %>">
+        <td><%> record_type_text %></td>
+
+        <%if host == '@'%>
+            <td>{{ zone.zone }}</td>
+        <%else%>
+            <td><%> host %>.{{ zone.zone }}</td>
+        <%/if%>
+
+        <td><%> answer %></td>
+        <td><%> ttl %></td>
+        <%if record_type_text == 'MX'%>
+            <td><%> priority %></td>
+        <%else%>
+            <td></td>
+        <%/if%>
+        <td>
+
+            <a href="javascript:void(0);" onClick="dns_editRecord(<%> id %>);">edit</a> | 
+            <a href="javascript:void(0);" onMouseDown="dns_deleteRecordTimer(<%> id %>);">delete</a>
+        </td>
+    </tr>
+
+</script>
+
+<script id="addRecordTemplate" type="text/x-jsredner">
+
+    <tr id="addRecordTr">
+    <form id="addRecordForm">
+    {% csrf_token %}
+    <input type="hidden" value="/api/v1/zone/{{ zone.id }}/" name="zone" form="addRecordForm">
+    <td>
+        <select name="record_type" id="record_type" onChange="dns_priorityRecord();" form="addRecordForm">
+        {% for value, text in record_type_choices %}
+            <option value="{{ value }}">{{ text }}</option>
+        {% endfor %}
+        </select>
+    </td>
+    <td>
+        <input type="text" name="host" id="host" form="addRecordForm">.{{ zone.zone }}</input>
+    </td>
+    <td>
+        <input type="text" name="answer" id="answer" form="addRecordForm"></input>
+    </td>
+    <td class="col-sm-1">
+        <input class="col-sm-10" type="text" name="ttl" id="ttl" value="{{ default_ttl }}" form="addRecordForm"></input>
+    </td>
+    <td class="col-sm-1" id='priorityTd'>
+        <input type="hidden" name="priority" id="priority" value="0" form="addRecordForm"></input>
+    </td>
+    <td>
+        <input type="button" class="btn btn-primary" value="Add" onClick="dns_addRecord();">
+    </td>
+    </form>
+</tr>
+</script>
+
+<script id="priorityWithInput" type="text/x-jsredner">
+
+    <input class="col-sm-10" type="text" name="priority" id="priority" form="addRecordForm"></input>
+
+</script>
+
+<script id="priorityWithoutInput" type="text/x-jsredner">
+
+    <input type="hidden" name="priority" id="priority" value="0" form="addRecordForm"></input>
+
+</script>
+
+<script id="editRecordTemplate" type="text/x-jsredner">
+
+    <form id="editRecordForm_<%> id %>"></form>
+
+    <tr id="record_<%> id %>">
+    {% csrf_token %}
+    <input type="hidden" value="/api/v1/zone/{{ zone.id }}/" name="zone" form="editRecordForm_<%> id %>">
+    <input type="hidden" value="<%> id %>" name="record_id" form="editRecordForm_<%> id %>">
+
+    <td>
+        <input type="hidden" name="record_type" value="<%> record_type %>" form="editRecordForm_<%> id %>">
+        <%> record_type_text %>
+    </td>
+
+    <td>
+        <%if host == '@'%>
+            <input type="text" name="host" id="host" form="editRecordForm_<%> id %>">.{{ zone.zone }}</input>
+        <%else%>
+            <input type="text" name="host" id="host" form="editRecordForm_<%> id %>" value="<%> host %>">.{{ zone.zone }}</input>
+        <%/if%>
+    </td>
+
+    <td>
+        <input type="text" name="answer" id="answer" form="editRecordForm_<%> id %>" value="<%> answer %>"></input>
+    </td>
+
+    <td class="col-sm-1">
+        <input class="col-sm-10" type="text" name="ttl" id="ttl" value="<%> ttl %>" form="editRecordForm_<%> id %>"></input>
+    </td>
+
+    <td class="col-sm-1">
+        <%if record_type_text == 'MX'%>
+        <input class="col-sm-10" type="text" name="priority" id="priority" value="<%> priority %>" form="editRecordForm_<%> id %>"></input>
+        <%else%>
+        <input type="hidden" name="priority" id="priority" value="0" form="editRecordForm_<%> id %>"></input>
+        <%/if%>
+    </td>
+
+    <td>
+        <input type="button" class="btn btn-warning" value="Update" onClick="dns_patchRecord(<%> id %>);"> | 
+        <input type="button" class="btn btn-primary" value="Cancel" onClick="dns_patchCancel(<%> id %>);">
+    </td>
+</tr>
+</script>
+
+<script id="notifyGenerate" type="text/x-jsredner">
+    <span class="glyphicon glyphicon-warning-sign"> <b>Change & generate reminder!</b></span>
+    <p>This zone is also present in another view(s).<br/>
+    Do not forget to change & generate it there as well.</p>
+</script>
+
+<div class="container">
+
+<h3><span class="text-warning">{{ zone.zone }}</span> in view <span class="text-info">{{ zone.view.view }}</span></h3>
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>SOA</h4>
+        <dl class="dl-horizontal">
+            <dt>origin:</dt>
+            <dd>{{ zone.origin }}</dd>
+            <dt>mail_addr:</dt>
+            <dd>{{ zone.mail_addr }}</dd>
+            <dt>serial:</dt>
+            <dd>{{ zone.serial }}</dd>
+            <dt>refresh:</dt>
+            <dd>{{ zone.refresh }}</dd>
+            <dt>retry:</dt>
+            <dd>{{ zone.retry }}</dd>
+            <dt>expire:</dt>
+            <dd>{{ zone.expire }}</dd>
+            <dt>minimum:</dt>
+            <dd>{{ zone.minimum }}</dd>
+        </dl>
+    </div>
+    <div class="col-md-6">
+    <h4>Commands</h4>
+        <input type="button" class="btn btn-primary" value="Generate" onClick="dns_generateZone({{ zone.id }});"> <span class="text-muted">apply changes and generate new zone file</span>
+        <br/><br/>
+        <form id="cloneZoneForm"></form>
+        <input type="button" class="btn btn-warning" value="Clone" onMouseDown="dns_cloneZoneTimer();"> zone to
+        <input type="hidden" form="cloneZoneForm" value="{{ zone.id }}" name="zone_id"> 
+        <select form="cloneZoneForm" name="view_id">
+        {% for view in cloneViews %}
+            <option value="{{ view.pk }}">{{ view.view }}</option>
+        {% endfor %}
+        </select>
+        <span class="text-muted"> clones zone to view. Use with caution.</span>
+
+        <br/><br/>
+        {% if zone_list.count > 1 %}
+            Other views:
+            {% for zone_v in zone_list %}
+                {% if zone_v.view.view != zone.view.view %}
+                    <a href="{% url 'main:records' zone_v.id %}">{{ zone_v.view.view }}</a>
+                {% endif%}
+            {% endfor %}
+        {% endif %}
+
+    </div>
+</div>
+<h4>Records</h4>
+<table class="table" id="recordTable" style="word-wrap: break-word; table-layout: fixed;">
+<thead>
+    <tr>
+        <th class="col-md-1">type</th>
+        <th class="col-md-3">host</th>
+        <th class="col-md-3">answer</th>
+        <th class="col-md-1">ttl</th>
+        <th class="col-md-1">priority</th>
+        <th class="col-md-3">actions</th>
+    </tr>
+</thead>
+<tbody id="recordList">
+
+</tbody>
+</table>
+</div>
+
+<script type="text/javascript">
+    $( document ).ready( function() {
+        dns_getRecords({{ zone.id }});
+    } );
+
+    function dns_checkZoneView() {
+        {% if zone_list.count > 1 %}
+        $.notify({
+           message: $( '#notifyGenerate' ).render(),
+        },{
+            type: 'warning',
+            timer: 5000,
+        });
+        {% endif %}
+        return;
+
+    }
+
+</script>
+{% endblock %}

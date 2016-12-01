@@ -1,0 +1,46 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+
+
+<script id="zoneListTemplate" type="text/x-jsrender">
+
+    <tr>
+        <%if type == 'slave'%>
+            <td><%>zone%></td>
+        <%else%>
+            <td><a href="/main/zone/<%>id%>"><%>zone%></a></td>
+        <%/if%>
+        <td><%>view.view%></td>
+        <td><%>type%></td>
+    </tr>
+
+</script>
+
+<div class="container">
+<label for="zoneFilter">Filter by zone:</label>
+<input type="text" id="zoneFilter" autofocus>
+<table class="table" id="zonesTable">
+<thead>
+    <tr>
+        <th>Zone</th>
+        <th>View</th>
+        <th>Type</th>
+    </tr>
+</thead>
+<tbody id="zoneList">
+
+</tbody>
+</table>
+</div>
+
+<script type="text/javascript">
+    $( document ).ready( function() {
+        dns_getZones();
+    } );
+
+    $( '#zoneFilter' ).keypress(function() {
+        dns_getZones($('#zoneFilter').val());
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "main/index.html" %}
+
+{% block content %}
+
+<script id="RecordTemplate" type="text/x-jsredner">
+
+    <tr id="record_<%> id %>">
+        <td><%> record_type_text %></td>
+
+        <%if host == '@'%>
+            <td><span class="text-muted"><%> zone.zone %></span></td>
+        <%else%>
+            <td><%> host %>.<span class="text-muted"><%> zone.zone %></span></td>
+        <%/if%>
+
+        <td><%> zone.view.view %></td>
+        <td><%> answer %></td>
+        <td><%> ttl %></td>
+        <%if record_type_text == 'MX'%>
+            <td><%> priority %></td>
+        <%else%>
+            <td></td>
+        <%/if%>
+        <td>
+            <%> history_date %></td>
+        </td>
+        <td>
+            <%> history_user.username %>
+        </td>
+        <td>
+            <%> history_type %>
+        </td>
+    </tr>
+
+</script>
+
+
+<div class="container">
+
+<form class="form-horizontal">
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="hostFilter">Host</label>
+    <div class="col-sm-3">
+        <input type="text"  id="hostFilter" class="form-control filtercl">
+    </div>
+    <div class="col-sm-4">
+        <label class="control-label"for="totalRecords">Records found: </label>
+        <span id="totalRecords"></span>
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="zoneFilter">Zone</label>
+    <div class="col-sm-3">
+        <input type="text" id="zoneFilter" class="form-control filtercl">
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="control-label col-sm-1" for="answerFilter">Answer</label>
+    <div class="col-sm-3">
+        <input type="text" id="answerFilter" class="form-control filtercl">
+    </div>
+</div>
+
+</form>
+
+<table class="table" id="recordTable" style="word-wrap: break-word; table-layout: fixed;">
+<thead>
+    <tr>
+        <th class="col-md-1">type</th>
+        <th class="col-md-2">host</th>
+        <th class="col-md-1">view</th>
+        <th class="col-md-2">answer</th>
+        <th class="col-md-1">ttl</th>
+        <th class="col-md-1">priority</th>
+        <th class="col-md-2">date</th>
+        <th class="col-md-2">user</th>
+        <th class="col-md-1">action</th>
+    </tr>
+</thead>
+<tbody id="recordList">
+
+</tbody>
+</table>
+<button id="showMoreButton" class="hidden center-block btn btn-info" onClick="showMoreRecords();">Show more</button>
+<br/>
+</div>
+
+<script type="text/javascript">
+    var RecordSearch = {};
+    RecordSearch.offset = 0;
+    $( document ).ready( function() {
+        dns_historyRecords();
+    } );
+
+    $( ".filtercl" ).keyup(function() {
+        RecordSearch.offset = 0;
+        $( '#recordList' ).empty();
+        dns_historyRecords(RecordSearch.offset, 40, $('#hostFilter').val(), $('#zoneFilter').val(), $('#answerFilter').val());
+    });
+
+    function showMoreRecords() {
+
+        RecordSearch.offset += 40;
+        dns_historyRecords(RecordSearch.offset, 40, $('#hostFilter').val(), $('#zoneFilter').val(), $('#answerFilter').val());
+    }
+
+</script>
+{% endblock %}
